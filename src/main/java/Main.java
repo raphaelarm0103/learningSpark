@@ -31,17 +31,19 @@ public class Main implements Serializable {
         SparkConf sparkConf = new SparkConf().setAppName("startingSpark").setMaster("local[*]");
         JavaSparkContext sc = new JavaSparkContext(sparkConf);
 
-        JavaRDD<String> originalLogValues = sc.parallelize(inputData);
+        sc.parallelize(inputData).mapToPair(s -> new Tuple2<>(s.split(":")[0], 1L))
+                .reduceByKey(Long::sum)
+                .foreach(tuple -> System.out.println(tuple._1 + " tem " + tuple._2 + " instancias "));
 
-        JavaPairRDD<String, Long> pairRDD = (originalLogValues.mapToPair(s -> {
-           String[] splitValues = s.split(":");
-           String levelLog = splitValues[0];
-           return new Tuple2<>(levelLog, 1L);
+//        JavaPairRDD<String, Long> pairRDD = (originalLogValues.mapToPair(s -> {
+//           String[] splitValues = s.split(":");
+//           String levelLog = splitValues[0];
+//           return new Tuple2<>(levelLog, 1L);
 
-        }));
+//        }));
 
-        JavaPairRDD<String, Long> stringLongJavaPairRDD = pairRDD.reduceByKey((value1, value2) -> value1 + value2);
-        stringLongJavaPairRDD.foreach((tuple -> System.out.println(tuple._1 + "tem" + tuple._2 + "instancias")));
+//        JavaPairRDD<String, Long> stringLongJavaPairRDD = pairRDD.reduceByKey((value1, value2) -> value1 + value2);
+//        stringLongJavaPairRDD.foreach((tuple -> System.out.println(tuple._1 + "tem" + tuple._2 + "instancias")));
 
         sc.close();
 
