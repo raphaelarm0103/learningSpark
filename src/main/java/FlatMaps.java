@@ -1,18 +1,16 @@
-
-
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import scala.Tuple2;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-
-public class Main implements Serializable {
+public class FlatMaps implements Serializable {
 
     public static void main(String[] args) throws IOException {
         List<String> inputData = new ArrayList<>();
@@ -29,23 +27,22 @@ public class Main implements Serializable {
         SparkConf sparkConf = new SparkConf().setAppName("startingSpark").setMaster("local[*]");
         JavaSparkContext sc = new JavaSparkContext(sparkConf);
 
-        sc.parallelize(inputData).mapToPair(s -> new Tuple2<>(s.split(":")[0], 1L))
-                .reduceByKey(Long::sum)
-                .foreach(tuple -> System.out.println(tuple._1 + " tem " + tuple._2 + "instancias"));
+        sc.parallelize(inputData)
+                .flatMap(s -> Arrays.asList(s.split(" ")).iterator())
+                .filter(word -> word.length() > 2)
+                .collect().forEach(System.out::println);
 
-        //código mapeando por chave e valor, [0] posição um do array passado, e 1L pegando o tamanho após o split :
+        //código para filtrar a lista de String com o iterator de tamanho, filtrando palavras acima de tamanho 2, coletando e printando cada palavra.
 
-//        JavaPairRDD<String, Long> pairRDD = (originalLogValues.mapToPair(s -> {
-//           String[] splitValues = s.split(":");
-//           String levelLog = splitValues[0];
-//           return new Tuple2<>(levelLog, 1L);
-
-//        }));
-
-//        JavaPairRDD<String, Long> stringLongJavaPairRDD = pairRDD.reduceByKey((value1, value2) -> value1 + value2);
-//        stringLongJavaPairRDD.foreach((tuple -> System.out.println(tuple._1 + "tem" + tuple._2 + "instancias")));
-
+//        JavaRDD<String> words = (sentences.flatMap(s -> Arrays.asList(s.split(" ")).iterator()));
+//
+//        JavaRDD<String> filter = words.filter(word -> word.length() > 2);
+//
+//        filter.collect().forEach(System.out::println);
         sc.close();
+
+
 
     }
 }
+
